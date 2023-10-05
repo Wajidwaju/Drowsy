@@ -1,6 +1,10 @@
+import 'dart:async';
+
+import 'package:camera/camera.dart';
 import 'package:drowsy/login.dart';
 import 'package:drowsy/model/user.dart';
 import 'package:flutter/material.dart';
+import 'package:volume_control/volume_control.dart'; // Import the volume_control package
 
 void main() {
   runApp(const MyApp());
@@ -33,34 +37,172 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Driver Drowsy'),
+        automaticallyImplyLeading: false,
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/images/bg.png"),
-            fit: BoxFit.fitWidth,
+            fit: BoxFit.cover,
           ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              SizedBox(
-                height: 450,
-              ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VolumeAdjustmentScreen(),
+                    ),
+                  );
+                },
                 child: const Text('Adjustment'),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CameraView(),
+                    ),
+                  );
+                },
                 child: const Text('Start'),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class VolumeAdjustmentScreen extends StatefulWidget {
+  @override
+  _VolumeAdjustmentScreenState createState() => _VolumeAdjustmentScreenState();
+}
+
+class _VolumeAdjustmentScreenState extends State<VolumeAdjustmentScreen> {
+  double? _currentVolume = null; // Initial slider value (0.5 for mid-volume)
+  Timer timer = Timer(Duration(seconds: 1), () {});
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentVolume(); // Get the initial volume level of the device
+  }
+
+  void refreshVolume() {
+    timer = Timer.periodic(Duration(milliseconds: 500), (timer) async {
+      double currentVolume = await VolumeControl.volume;
+      if (currentVolume != _currentVolume) {
+        setState(() {
+          _currentVolume = currentVolume;
+        });
+      }
+    });
+  }
+
+  void _getCurrentVolume() async {
+    double currentVolume = await VolumeControl.volume;
+    setState(() {
+      _currentVolume = currentVolume;
+    });
+    refreshVolume();
+  }
+
+  void _setDeviceVolume(double value) async {
+    await VolumeControl.setVolume(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Volume Adjustment'),
+      ),
+      body: Center(
+        child: _currentVolume == null
+            ? CircularProgressIndicator()
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    'Adjust Volume',
+                    style: TextStyle(fontSize: 20.0),
+                  ),
+                  Slider(
+                    value: _currentVolume!,
+                    onChanged: (value) {
+                      setState(() {
+                        _currentVolume = value;
+                      });
+                      _setDeviceVolume(value); // Change the device's volume
+                    },
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 100,
+                    label: 'Volume',
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    super.dispose();
+  }
+}
+
+// Screen which is scaffold and contains camera view
+class CameraView extends StatefulWidget {
+  const CameraView({super.key});
+
+  @override
+  _CameraViewState createState() => _CameraViewState();
+}
+
+class _CameraViewState extends State<CameraView> {
+  CameraController cameraController = CameraController(
+    CameraDescription(
+      name: '0',
+      lensDirection: CameraLensDirection.back,
+      sensorOrientation: 0,
+    ),
+    ResolutionPreset.medium,
+  );
+
+  @override
+  void initState() {
+    cameraController.initialize().then((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Camera View'),
+      ),
+      body: CameraPreview(cameraController, child: Text('hello')),
     );
   }
 }

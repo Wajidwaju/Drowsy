@@ -98,7 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             final str = (await SharedPreferences.getInstance())
                                 .getString(email!);
                             if (str == null) {
-                              showAlert(context, "User not registered.");
+                              Future.delayed(const Duration(milliseconds: 100),
+                                  () {
+                                showAlert(context, "User not registered.");
+                              });
+                              // }
                               return;
                             }
                             final userJson = jsonDecode(str);
@@ -106,17 +110,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             final user = User.fromJson(userJson);
                             if (password == user.password) {
                               print("logged in");
-                              showAlert(context, "Login sucessful");
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => Home(model: user),
-                                ),
-                              );
-                            } else {
-                              print("Incorrect password");
-                              showAlert(context, "Incorrect password.");
+                              Future.delayed(Duration(milliseconds: 100), () {
+                                // showAlert(context, "Login sucessful");
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Home(model: user),
+                                  ),
+                                );
+                              });
                             }
+                          } else {
+                            print("Incorrect password");
+                            showAlert(context, "Incorrect password.");
                           }
                         },
                         child: Text('Login'),
@@ -262,10 +268,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             (await SharedPreferences.getInstance())
                                 .setString(email!, jsonEncode(user.toJson()));
                             print(user.toJson());
-                            Navigator.pop(context);
-                            form.currentState!.reset();
-                            print("registered succesful");
-                            showAlert(context, "Registration successful.");
+
+                            Future.delayed(const Duration(milliseconds: 100),
+                                () {
+                              form.currentState!.reset();
+
+                              Navigator.pop(context);
+                              showAlert(context, "Registration successful.");
+                              print("registered succesful");
+                            });
+                            // }
                           } else {
                             print("fill the fields");
                           }
@@ -309,6 +321,6 @@ showAlert(context, String message) {
           style: TextStyle(fontSize: 12),
         ))
   ]));
-  Future.delayed(Duration(seconds: 1)).then(
+  Future.delayed(const Duration(seconds: 1)).then(
       (value) => ScaffoldMessenger.of(context).hideCurrentMaterialBanner());
 }
