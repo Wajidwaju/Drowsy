@@ -63,13 +63,19 @@ class _HomeState extends State<Home> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CameraView(),
-                    ),
-                  );
+                onPressed: () async {
+                  final cameras = await availableCameras();
+
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CameraView(
+                          cameras: cameras,
+                        ),
+                      ),
+                    );
+                  });
                 },
                 child: const Text('Start'),
               ),
@@ -163,8 +169,9 @@ class _VolumeAdjustmentScreenState extends State<VolumeAdjustmentScreen> {
 
 // Screen which is scaffold and contains camera view
 class CameraView extends StatefulWidget {
-  const CameraView({super.key});
+  const CameraView({super.key, required this.cameras});
 
+  final List<CameraDescription> cameras;
   @override
   _CameraViewState createState() => _CameraViewState();
 }
@@ -173,14 +180,17 @@ class _CameraViewState extends State<CameraView> {
   CameraController cameraController = CameraController(
     CameraDescription(
       name: '0',
-      lensDirection: CameraLensDirection.back,
+      lensDirection: CameraLensDirection.front,
       sensorOrientation: 0,
     ),
+    // widget.cameras[1],
     ResolutionPreset.medium,
   );
-
   @override
   void initState() {
+    cameraController =
+        CameraController(widget.cameras[1], ResolutionPreset.medium);
+
     cameraController.initialize().then((_) {
       if (!mounted) {
         return;
@@ -202,7 +212,7 @@ class _CameraViewState extends State<CameraView> {
       appBar: AppBar(
         title: const Text('Camera View'),
       ),
-      body: CameraPreview(cameraController, child: Text('hello')),
+      body: CameraPreview(cameraController),
     );
   }
 }
