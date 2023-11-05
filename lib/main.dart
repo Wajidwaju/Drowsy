@@ -4,7 +4,9 @@ import 'package:camera/camera.dart';
 import 'package:drowsy/login.dart';
 import 'package:drowsy/model/user.dart';
 import 'package:flutter/material.dart';
-import 'package:volume_control/volume_control.dart'; // Import the volume_control package
+import 'package:volume_control/volume_control.dart';
+
+import 'detection_screen.dart'; // Import the volume_control package
 
 void main() {
   runApp(const MyApp());
@@ -70,9 +72,10 @@ class _HomeState extends State<Home> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CameraView(
-                          cameras: cameras,
-                        ),
+                        builder: (context) => CameraScreen()
+                        //     CameraView(
+                        //   cameras: cameras,
+                        // ),
                       ),
                     );
                   });
